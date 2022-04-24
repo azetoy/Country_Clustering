@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 import pandas as pd
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
@@ -17,7 +17,6 @@ def correlation(data):
 
 
 def show_difference(kmeans, word):
-
     # gpd mean pib in French
     sns.scatterplot(kmeans[word], kmeans['gdpp'], hue='KMeans_Clusters', data=kmeans)
 
@@ -29,6 +28,37 @@ def show_difference(kmeans, word):
     plt.xlabel(word, fontsize=12)
     plt.ylabel("gdpp", fontsize=12)
     plt.show()
+
+
+def k_means(scaled, df):
+    # by using elbow method we can find the optimal number of clusters for the data (3)
+    kmeans = KMeans(n_clusters=3)
+    kmeans.fit(scaled)
+
+    # now we are going to see if the model is good by using the silhouette coefficient as the coefficient
+    # is 0.28 the model is average good
+    # print(metrics.silhouette_score(scaled, kmeans.labels_))
+
+    # predict the clusters
+    kmeans.fit_predict(scaled, kmeans.labels_)
+    prediction = kmeans.labels_
+    kmeans_data = pd.DataFrame(df)
+    kmeans_data['KMeans_Clusters'] = prediction
+    # we save the dataframe to csv file
+    kmeans_data.to_csv('data_csv/kmeans_result.csv', index=False)
+
+    # show_difference(kmeans_data, 'child_mort')
+
+
+def d_bscan(scaled, df):
+    # use the dbscan algorithm to find the optimal number of clusters
+    dbscan = DBSCAN(eps=0.3, min_samples=10)
+    dbscan.fit(scaled)
+    dbscan.fit_predict(scaled, dbscan.labels_)
+    prediction = dbscan.labels_
+    dbscan_data = pd.DataFrame(df)
+    dbscan_data['DBSCAN_Clusters'] = prediction
+    dbscan_data.to_csv('data_csv/dbscan_result.csv', index=False)
 
 
 def main():
@@ -45,26 +75,16 @@ def main():
 
     scaling = StandardScaler()
     scaled = pd.DataFrame(scaling.fit_transform(data), columns=data.columns)
-    print(scaled.head())
+    # print(scaled.head())
 
-    # by using elbow method we can find the optimal number of clusters for the data (3)
+    # we use the k means function to use the k means algorithm to the data set
 
-    kmeans = KMeans(n_clusters=3)
-    kmeans.fit(scaled)
+    # k_means(scaled, df)
 
-    # now we are going to see if the model is good by using the silhouette coefficient as the coefficient
-    # is 0.28 the model is average good
-    # print(metrics.silhouette_score(scaled, kmeans.labels_))
-
-    # predict the clusters
-    kmeans.fit_predict(scaled, kmeans.labels_)
-    prediction = kmeans.labels_
-    kmeans_data = pd.DataFrame(df)
-    kmeans_data['KMeans_Clusters'] = prediction
-    # we save the dataframe to csv file
-    kmeans_data.to_csv('data_csv/kmeans_result.csv', index=False)
-
-    show_difference(kmeans_data, 'child_mort')
+    # we use the dbscan function to use the dbscan algorithm to the data set if you make the dbscan function call
+    # after the k means function call it will give you the k means clusters and the dbscan clusters in the
+    # dbscan_result.csv file the same thing will happen if you reverse the call this time the two cluster data will
+    # be in the kmeans_result.csv file d_bscan(scaled, df)
 
     return 0
 
