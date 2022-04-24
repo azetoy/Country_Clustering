@@ -1,0 +1,5 @@
+﻿Column Name,Description
+country,Name of the country
+child_mort,Death of children under 5 years of age per 1000 live births
+exports,Exports of goods and services per capita. Given as %age of the GDP per capita
+health,Total health spending per capita. Given as %age of GDP per capita
