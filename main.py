@@ -1,5 +1,6 @@
+import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans, DBSCAN, Birch
 import pandas as pd
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
@@ -16,21 +17,8 @@ def correlation(data):
     # together)
 
 
-def show_difference(kmeans, word):
-    # gpd mean pib in French
-    sns.scatterplot(kmeans[word], kmeans['gdpp'], hue='KMeans_Clusters', data=kmeans)
-
-    # make the first character of the word to uppercase and replace any _ with a space
-    title = word.title().replace('_', ' ')
-    title = title[0].title() + title[1:]
-
-    plt.title(title + " vs gdpp", fontsize=15)
-    plt.xlabel(word, fontsize=12)
-    plt.ylabel("gdpp", fontsize=12)
-    plt.show()
-
-
 def k_means(scaled, df):
+    word = 'income'
     # by using elbow method we can find the optimal number of clusters for the data (3)
     kmeans = KMeans(n_clusters=3)
     kmeans.fit(scaled)
@@ -47,18 +35,56 @@ def k_means(scaled, df):
     # we save the dataframe to csv file
     kmeans_data.to_csv('data_csv/kmeans_result.csv', index=False)
 
-    # show_difference(kmeans_data, 'child_mort')
+    sns.scatterplot(x=kmeans_data[word], y=kmeans_data.gdpp, hue='KMeans_Clusters', data=kmeans_data)
+
+    # make the first character of the word to uppercase and replace any _ with a space
+    title = word.title().replace('_', ' ')
+    title = title[0].title() + title[1:]
+
+    plt.title(title + " vs gdpp", fontsize=15)
+    plt.xlabel(word, fontsize=12)
+    plt.ylabel("gdpp", fontsize=12)
+    plt.savefig("Plots/{}.png".format("Kmeans_Clusters_" + word))
+    plt.show()
 
 
-def d_bscan(scaled, df):
-    # use the dbscan algorithm to find the optimal number of clusters
-    dbscan = DBSCAN(eps=0.3, min_samples=10)
-    dbscan.fit(scaled)
-    dbscan.fit_predict(scaled, dbscan.labels_)
-    prediction = dbscan.labels_
-    dbscan_data = pd.DataFrame(df)
-    dbscan_data['DBSCAN_Clusters'] = prediction
-    dbscan_data.to_csv('data_csv/dbscan_result.csv', index=False)
+def d_bscan(data, df):
+    word = 'income'
+    # we replace any null value to number and create a numpy array
+    # with the data, and finally we scale the data
+    data = np.nan_to_num(data)
+    data = np.array(data, dtype=np.float64)
+    data = StandardScaler().fit_transform(data)
+
+    db = DBSCAN(eps=1, min_samples=3).fit(data)
+
+    datacopy = df.copy()
+    datacopy['DB_cluster'] = db.labels_
+    datacopy.to_csv('data_csv/DB_SCAN.csv', index=False)
+
+    plt.figure(figsize=(12, 6))
+    plt.scatter(datacopy['income'], datacopy['gdpp'], c=db.labels_)
+    title = word.title().replace('_', ' ')
+    title = title[0].title() + title[1:]
+    plt.title(title + ' vs GDPP ', fontsize=15)
+    plt.xlabel(word, fontsize=12)
+    plt.ylabel("GDPP", fontsize=12)
+    plt.savefig("Plots/{}.png".format("DBSCAN_Clusters_" + word))
+    plt.show()
+
+
+def birch(scaled, df):
+    birch = Birch(n_clusters=5).fit(scaled)
+    pred_birch = birch.fit_predict(scaled)
+
+    clustered_data = df.copy()
+    clustered_data["cluster_index"] = pred_birch
+
+    sns.scatterplot(x=clustered_data.gdpp,
+                    y=clustered_data.income,
+                    hue=clustered_data.cluster_index,
+                    palette="deep")
+    plt.savefig("data_csv/Birch.png")
 
 
 def main():
@@ -75,7 +101,6 @@ def main():
 
     scaling = StandardScaler()
     scaled = pd.DataFrame(scaling.fit_transform(data), columns=data.columns)
-    # print(scaled.head())
 
     # we use the k means function to use the k means algorithm to the data set
 
@@ -84,8 +109,11 @@ def main():
     # we use the dbscan function to use the dbscan algorithm to the data set if you make the dbscan function call
     # after the k means function call it will give you the k means clusters and the dbscan clusters in the
     # dbscan_result.csv file the same thing will happen if you reverse the call this time the two cluster data will
-    # be in the kmeans_result.csv file d_bscan(scaled, df)
+    # be in the kmeans_result.csv file
 
+    k_means(scaled, df)
+    # d_bscan(data, df)
+    # birch(scaled, df)
     return 0
 
 
