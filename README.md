@@ -21,3 +21,5 @@ The index 1 is the developing countries.
 The index 2 is the developed countries.  
 
 The same thing can be seen in the DBscan Plot![](Plots/DBSCAN_Clusters_income.png)
+
+In conclusion, any country that is in the category of underdeveloped is a good country to obtain subsidies if one wishes to establish a classification among them one can for example take the countries with the highest child mortality rate
